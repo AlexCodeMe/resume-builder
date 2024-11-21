@@ -15,11 +15,12 @@ export const metadata: Metadata = {
   description: "Create a resume in minutes with AI.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>

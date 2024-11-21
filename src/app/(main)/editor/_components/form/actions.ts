@@ -1,6 +1,8 @@
 "use server";
 
 import anthropic from "@/lib/anthropic";
+import { canUseAITools } from "@/lib/permissions";
+import { getUserSubscriptionLevel } from "@/lib/subscription";
 import {
   generateSummarySchema,
   GenerateSummaryInput,
@@ -9,9 +11,19 @@ import {
   WorkExperience,
 } from "@/lib/zod";
 import { TextBlock } from "@anthropic-ai/sdk/resources/messages.mjs";
+import { auth } from "@clerk/nextjs/server";
 
 export async function generateSummary(input: GenerateSummaryInput) {
-  // TODO: block non-premium users
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const subscriptionLevel = await getUserSubscriptionLevel(userId);
+  if (!canUseAITools(subscriptionLevel)) {
+    throw new Error("AI tools not allowed for this subscription level");
+  }
+
   const { jobTitle, workExperiences, educations, skills } =
     generateSummarySchema.parse(input);
 
@@ -77,7 +89,15 @@ export async function generateSummary(input: GenerateSummaryInput) {
 export async function generateWorkExperience(
   input: GenerateWorkExperienceInput,
 ) {
-  // TODO: block for non-premium users
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const subscriptionLevel = await getUserSubscriptionLevel(userId);
+  if (!canUseAITools(subscriptionLevel)) {
+    throw new Error("AI tools not allowed for this subscription level");
+  }
   const { description } = generateWorkExperienceSchema.parse(input);
 
   const systemMessage = `
